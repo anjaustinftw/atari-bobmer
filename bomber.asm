@@ -103,5 +103,5 @@ GameVisibleLine:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     org $FFFC                ; move to position $FFFC
-    word Reset               ; write 2 bytes with the program reset address
-    word Reset               ; write 2 bytes with the interruption vector
+    .word Reset               ; write 2 bytes with the program reset address
+    .word Reset               ; write 2 bytes with the interruption vector
