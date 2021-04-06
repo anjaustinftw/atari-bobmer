@@ -1,100 +1,172 @@
     processor 6502
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Include required files for VCS memory mapping and macros
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Include required files with VCS register memory mapping and macros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     include "vcs.h"
     include "macro.h"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Declare uninitialized variables
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Declare the variables starting from memory address $80
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     seg.u Variables
     org $80
 
-JetXPos     byte            ; player0 x-position
-JetYPos     byte            ; player0 y-position
-BomberXPos  byte            ; player1 x-position
-BomberYPos  byte            ; player1 y-position
+JetXPos         byte         ; player0 x-position
+JetYPos         byte         ; player0 y-position
+BomberXPos      byte         ; player1 x-position
+BomberYPos      byte         ; player1 y-position
+JetSpritePtr    word         ; pointer to player0 sprite lookup table
+JetColorPtr     word         ; pointer to player0 color lookup table
+BomberSpritePtr word         ; pointer to player1 sprite lookup table
+BomberColorPtr  word         ; pointer to player1 color lookup table
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Start ROM code at memory address $F000
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Define constants
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+JET_HEIGHT = 9               ; player0 sprite height (# rows in lookup table)
+BOMBER_HEIGHT = 9            ; player1 sprite height (# rows in lookup table)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start our ROM code at memory address $F000
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     seg Code
     org $F000
 
 Reset:
-    CLEAN_START             ; Macro to clear memory and registers
+    CLEAN_START              ; call macro to reset memory and registers
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize RAM variables and TIA registers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     lda #10
-    sta JetYPos             ; JetYPos = 10
+    sta JetYPos              ; JetYPos = 10
     lda #60
-    sta JetXPos             ; JetXPos = 60
+    sta JetXPos              ; JetXPos = 60
+    lda #83
+    sta BomberYPos           ; BomberYPos = 83
+    lda #54
+    sta BomberXPos           ; BomberXPos = 54
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Start a new frame by activating VBLANK and VSYNC
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Initialize pointers to the correct lookup table addresses
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    lda #<JetSprite
+    sta JetSpritePtr         ; lo-byte pointer for jet sprite lookup table
+    lda #>JetSprite
+    sta JetSpritePtr+1       ; hi-byte pointer for jet sprite lookup table
 
+    lda #<JetColor
+    sta JetColorPtr          ; lo-byte pointer for jet color lookup table
+    lda #>JetColor
+    sta JetColorPtr+1        ; hi-byte pointer for jet color lookup table
+
+    lda #<BomberSprite
+    sta BomberSpritePtr      ; lo-byte pointer for enemy sprite lookup table
+    lda #>BomberSprite
+    sta BomberSpritePtr+1    ; hi-byte pointer for enemy sprite lookup table
+
+    lda #<BomberColor
+    sta BomberColorPtr       ; lo-byte pointer for enemy color lookup table
+    lda #>BomberColor
+    sta BomberColorPtr+1     ; hi-byte pointer for enemy color lookup table
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start the main display loop and frame rendering
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 StartFrame:
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Display VSYNC and VBLANK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     lda #2
-    sta VBLANK              ; Turn VBLANK on
-    sta VSYNC               ; Turn VSYNC on
+    sta VBLANK               ; turn on VBLANK
+    sta VSYNC                ; turn on VSYNC
     REPEAT 3
-        sta WSYNC
+        sta WSYNC            ; display 3 recommended lines of VSYNC
     REPEND
     lda #0
-    sta VSYNC               ; Turn VSYNC off
+    sta VSYNC                ; turn off VSYNC
     REPEAT 37
-        sta WSYNC
+        sta WSYNC            ; display the 37 recommended lines of VBLANK
     REPEND
-    sta VBLANK              ; Turn VBLANK off
+    sta VBLANK               ; turn off VBLANK
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Display 192 visible scanlines of main game
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Display the 192 visible scanlines of our main game
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 GameVisibleLine:
-    lda #$84                ; Set background color to blue
-    sta COLUBK
-    lda #$C2                ; Set playfield to green
-    sta COLUPF
-    
-    ldx #192                ; Count remaining Scanlines
-    
+    lda #$84
+    sta COLUBK               ; set background/river color to blue
+    lda #$C2
+    sta COLUPF               ; set playfield/grass color to green
+    lda #%00000001
+    sta CTRLPF               ; enable playfield reflection
+    lda #$F0
+    sta PF0                  ; setting PF0 bit pattern
+    lda #$FC
+    sta PF1                  ; setting PF1 bit pattern
+    lda #0
+    sta PF2                  ; setting PF2 bit pattern
+
+    ldx #96                 ; X counts the number of remaining scanlines
 .GameLineLoop:
-    sta WSYNC
-    dex
-    bne .GameLineLoop
+.AreWeInsideJetSprite:       ; check if should render sprite player0
+    txa                      ; transfer X to A
+    sec                      ; make sure carry flag is set
+    sbc JetYPos              ; subtract sprite Y coordinate
+    cmp JET_HEIGHT           ; are we inside the sprite height bounds?
+    bcc .DrawSpriteP0        ; if result < SpriteHeight, call subroutine
+    lda #0                   ; else, set lookup index to 0
+.DrawSpriteP0:
+    ;clc                      ; clears carry flag before addition
+    ;adc JetAnimOffset        ; jumps to correct sprite frame in memory
+    tay                      ; load Y so we can work with pointer
+    lda (JetSpritePtr),Y     ; load player bitmap slice of data
+    sta WSYNC                ; wait for next scanline
+    sta GRP0                 ; set graphics for player 0
+    lda (JetColorPtr),Y      ; load player color from lookup table
+    sta COLUP0               ; set color for player 0 slice
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.AreWeInsideBomberSprite:    ; check if should render sprite player1
+    txa                      ; transfer X to A
+    sec                      ; make sure carry flag is set
+    sbc BomberYPos           ; subtract sprite Y coordinate
+    cmp BOMBER_HEIGHT        ; are we inside the sprite height bounds?
+    bcc .DrawSpriteP1        ; if result < SpriteHeight, call subroutine
+    lda #0                   ; else, set index to 0
+.DrawSpriteP1:
+    tay
+    lda #%0000101
+    sta NUSIZ1               ; stretch player1 sprite
+    lda (BomberSpritePtr),Y  ; load player bitmap slice of data
+    sta WSYNC                ; wait for next scanline
+    sta GRP1                 ; set graphics for player 0
+    lda (BomberColorPtr),Y   ; load player color from lookup table
+    sta COLUP1               ; set color for player 0 slice
+
+    dex                      ; X--
+    bne .GameLineLoop        ; repeat next main game scanline while X != 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Display Overscan
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     lda #2
-    sta VBLANK
+    sta VBLANK               ; turn on VBLANK again
     REPEAT 30
-        sta WSYNC
+        sta WSYNC            ; display 30 recommended lines of VBlank Overscan
     REPEND
     lda #0
-    sta VBLANK
+    sta VBLANK               ; turn off VBLANK
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Loop to next frame
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Loop back to start a brand new frame
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    jmp StartFrame           ; continue to display the next frame
 
-    jmp StartFrame
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Declare Sprites
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Declare ROM lookup tables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 JetSprite:
     .byte #%00000000         ;
     .byte #%00010100         ;   # #
@@ -161,10 +233,9 @@ BomberColor:
     .byte #$40
     .byte #$40
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Complete ROM size with exactly 4KB
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    org $FCCC
-    .word Reset
-    .word Reset
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    org $FFFC                ; move to position $FFFC
+    word Reset               ; write 2 bytes with the program reset address
+    word Reset               ; write 2 bytes with the interruption vector

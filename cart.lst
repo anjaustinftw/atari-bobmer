@@ -580,9 +580,79 @@
      92  f0c2		       4c 13 f0 	      jmp	StartFrame
      93  f0c5
      94  f0c5							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     95  f0c5							;; Complete ROM size with exactly 4KB
+     95  f0c5							;; Declare Sprites
      96  f0c5							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
      97  f0c5
-     98  fccc					      org	$FCCC
-     99  fccc		       00 f0		      word.w	Reset
-    100  fcce		       00 f0		      word.w	Reset
+     98  f0c5				   JetSprite
+     99  f0c5		       00		      .byte.b	#%00000000	;
+    100  f0c6		       14		      .byte.b	#%00010100	;   # #
+    101  f0c7		       7f		      .byte.b	#%01111111	; #######
+    102  f0c8		       3e		      .byte.b	#%00111110	;  #####
+    103  f0c9		       1c		      .byte.b	#%00011100	;   ###
+    104  f0ca		       1c		      .byte.b	#%00011100	;   ###
+    105  f0cb		       08		      .byte.b	#%00001000	;    #
+    106  f0cc		       08		      .byte.b	#%00001000	;    #
+    107  f0cd		       08		      .byte.b	#%00001000	;    #
+    108  f0ce
+    109  f0ce				   JetSpriteTurn
+    110  f0ce		       00		      .byte.b	#%00000000	;
+    111  f0cf		       08		      .byte.b	#%00001000	;    #
+    112  f0d0		       3e		      .byte.b	#%00111110	;  #####
+    113  f0d1		       1c		      .byte.b	#%00011100	;   ###
+    114  f0d2		       1c		      .byte.b	#%00011100	;   ###
+    115  f0d3		       1c		      .byte.b	#%00011100	;   ###
+    116  f0d4		       08		      .byte.b	#%00001000	;    #
+    117  f0d5		       08		      .byte.b	#%00001000	;    #
+    118  f0d6		       08		      .byte.b	#%00001000	;    #
+    119  f0d7
+    120  f0d7				   BomberSprite
+    121  f0d7		       00		      .byte.b	#%00000000	;
+    122  f0d8		       08		      .byte.b	#%00001000	;    #
+    123  f0d9		       08		      .byte.b	#%00001000	;    #
+    124  f0da		       2a		      .byte.b	#%00101010	;  # # #
+    125  f0db		       3e		      .byte.b	#%00111110	;  #####
+    126  f0dc		       7f		      .byte.b	#%01111111	; #######
+    127  f0dd		       2a		      .byte.b	#%00101010	;  # # #
+    128  f0de		       08		      .byte.b	#%00001000	;    #
+    129  f0df		       1c		      .byte.b	#%00011100	;   ###
+    130  f0e0
+    131  f0e0				   JetColor
+    132  f0e0		       00		      .byte.b	#$00
+    133  f0e1		       fe		      .byte.b	#$FE
+    134  f0e2		       0c		      .byte.b	#$0C
+    135  f0e3		       0e		      .byte.b	#$0E
+    136  f0e4		       0e		      .byte.b	#$0E
+    137  f0e5		       04		      .byte.b	#$04
+    138  f0e6		       ba		      .byte.b	#$BA
+    139  f0e7		       0e		      .byte.b	#$0E
+    140  f0e8		       08		      .byte.b	#$08
+    141  f0e9
+    142  f0e9				   JetColorTurn
+    143  f0e9		       00		      .byte.b	#$00
+    144  f0ea		       fe		      .byte.b	#$FE
+    145  f0eb		       0c		      .byte.b	#$0C
+    146  f0ec		       0e		      .byte.b	#$0E
+    147  f0ed		       0e		      .byte.b	#$0E
+    148  f0ee		       04		      .byte.b	#$04
+    149  f0ef		       0e		      .byte.b	#$0E
+    150  f0f0		       0e		      .byte.b	#$0E
+    151  f0f1		       08		      .byte.b	#$08
+    152  f0f2
+    153  f0f2				   BomberColor
+    154  f0f2		       00		      .byte.b	#$00
+    155  f0f3		       32		      .byte.b	#$32
+    156  f0f4		       32		      .byte.b	#$32
+    157  f0f5		       0e		      .byte.b	#$0E
+    158  f0f6		       40		      .byte.b	#$40
+    159  f0f7		       40		      .byte.b	#$40
+    160  f0f8		       40		      .byte.b	#$40
+    161  f0f9		       40		      .byte.b	#$40
+    162  f0fa		       40		      .byte.b	#$40
+    163  f0fb
+    164  f0fb							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    165  f0fb							;; Complete ROM size with exactly 4KB
+    166  f0fb							;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    167  f0fb
+    168  fccc					      org	$FCCC
+    169  fccc		       00 f0		      .word.w	Reset
+    170  fcce		       00 f0		      .word.w	Reset
