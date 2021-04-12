@@ -3,18 +3,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Include required files with VCS register memory mapping and macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
     include "vcs.h"
     include "macro.h"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Declare the variables starting from memory address $80
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     seg.u Variables
     org $80
 
@@ -27,10 +23,7 @@ JetColorPtr     word         ; pointer to player0 color lookup table
 BomberSpritePtr word         ; pointer to player1 sprite lookup table
 BomberColorPtr  word         ; pointer to player1 color lookup table
 JetAnimOffset   byte         ; player0 frame offset for sprite animation
-<<<<<<< HEAD
 Random          byte         ; used to generate random bomber x-position
-=======
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define constants
@@ -42,11 +35,7 @@ BOMBER_HEIGHT = 9            ; player1 sprite height (# rows in lookup table)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start our ROM code at memory address $F000
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     seg Code
     org $F000
 
@@ -56,13 +45,9 @@ Reset:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize RAM variables and TIA registers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
     lda #68
     sta JetXPos              ; JetXPos = 68
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     lda #10
     sta JetYPos              ; JetYPos = 10
     lda #62
@@ -75,11 +60,7 @@ Reset:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize the pointers to the correct lookup table adresses
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     lda #<JetSprite
     sta JetSpritePtr         ; lo-byte pointer for jet sprite lookup table
     lda #>JetSprite
@@ -109,11 +90,7 @@ StartFrame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Calculations and tasks performed in the pre-VBlank
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-   
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     lda JetXPos
     ldy #0
     jsr SetObjectXPos        ; set player0 horizontal position
@@ -128,11 +105,7 @@ StartFrame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Display VSYNC and VBLANK
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     lda #2
     sta VBLANK               ; turn on VBLANK
     sta VSYNC                ; turn on VSYNC
@@ -147,11 +120,7 @@ StartFrame:
     sta VBLANK               ; turn off VBLANK
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 ;; Display 192 visible scanlines of our game (96 lines because 2-line kernel)
-=======
-;; Display the 96 visible scanlines of our main game (because 2-line kernel)
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GameVisibleLine:
@@ -212,20 +181,12 @@ GameVisibleLine:
     lda #0
     sta JetAnimOffset        ; reset jet animation frame to zero each frame
 
-<<<<<<< HEAD
     sta WSYNC                ; wait for a scanline
-=======
-    sta WSYNC                ; wait for final scanline
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Display Overscan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     lda #2
     sta VBLANK               ; turn on VBLANK again
     REPEAT 30
@@ -284,24 +245,14 @@ UpdateBomberPosition:
     dec BomberYPos           ; else, decrement enemy y-position for next frame
     jmp EndPositionUpdate
 .ResetBomberPosition
-<<<<<<< HEAD
     jsr GetRandomBomberPos   ; call subroutine for random bomber positio
 
-=======
-    lda #96
-    sta BomberYPos
-                              ; TODO: set bomber X position to random number
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
 EndPositionUpdate:           ; fallback for the position update code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Loop back to start a brand new frame
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     jmp StartFrame           ; continue to display the next frame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -327,7 +278,6 @@ SetObjectXPos subroutine
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 ;; Subroutine to generate a Linear-Feedback Shift Register random number
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Generate a LFSR random number for the X-position of the bomber.
@@ -361,8 +311,6 @@ GetRandomBomberPos subroutine
     rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-=======
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
 ;; Declare ROM lookup tables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -435,11 +383,7 @@ BomberColor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Complete ROM size with exactly 4KB
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 4cfbc3e8b60f30b39bcff29a2543038ede78a4ec
     org $FFFC                ; move to position $FFFC
     .word Reset               ; write 2 bytes with the program reset address
     .word Reset               ; write 2 bytes with the interruption vector
